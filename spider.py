@@ -154,16 +154,41 @@ def create_folder(title, url, time):
             print("writing error:", traceback.print_exc())
             return 0
         print("url text file created")
-    return "Downloads/" + time + title
+    return "Downloads/" + time + title + "/"
 
 
 def read_pic_url(bs):
-    picurl = bs.find_all("img")
-    print(picurl)
+    scriptpattern = re.compile(r"url:")
+    scripts = bs.find_all("script", text=scriptpattern)
+    # print(scripts[-1].string, "\n")
+    urlpattern = re.compile(r"url:'(.*?)',name")
+    urlgroup = []
+    for n in range(len(scripts)):
+        urls = re.findall(urlpattern, scripts[n].string)
+        print("the No.", n+1, "pic floor")
+        for url in urls:
+            urlgroup.append("https://img.nga.178.com/attachments/" + url)
+            print(url)
+        else:
+            print()
+    return urlgroup
 
 
-# def download_pic(url, path):
-
+def download_pic(urlgroup, path):
+    print("download start")
+    pattern = re.compile(r"-(.*)")
+    for url in urlgroup:
+        picname = re.findall(pattern, url)
+        print("picture name:", picname)
+        print("picture url:", url)
+        time.sleep(random.uniform(1, 2))
+        try:
+            urllib.request.urlretrieve(url, path + "".join(picname))
+        except IOError:
+            print(traceback.print_exc())
+        else:
+            print("download completed\n")
+    print("all picture download completed")
 
 
 if __name__ == '__main__':
@@ -173,10 +198,10 @@ if __name__ == '__main__':
     elif a == 0:
         sys.exit(0)
     # bs = read_page("https://bbs.nga.cn/thread.php?fid=-7")
-    bs = read_page("https://bbs.nga.cn/read.php?tid=17508952")
+    bs = read_page("https://bbs.nga.cn/read.php?tid=17524666")
     if bs == 0:
         sys.exit(0)
     # find_shadiao(bs)
-    # path = create_folder("[今日沙雕图]2019.06.08", "http://nga.178.com/read.php?tid=17508952", find_post_date(bs))
-    read_pic_url(bs)
-    # download_pic()
+    path = create_folder("谁来ps个赛博朋克2077沙雕图？", "https://bbs.nga.cn/read.php?tid=17524666", find_post_date(bs))
+    urlgroup = read_pic_url(bs)
+    download_pic(urlgroup, path)
