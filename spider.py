@@ -105,7 +105,7 @@ def read_page(url):  # 读取页面
     if url != "https://bbs.nga.cn/thread.php?fid=-7":  # 如果访问页面为水区首页
         print("reading:", url)
         try:
-            scripts = str(bs.find_all("script", text=re.compile(r"var __PAGE"))[0])
+            scripts = str(bs.find_all("script", text=re.compile(r"var __PAGE"))[0])  # 读取帖子回复页数
         except IndexError:
             maxpagenumber = 1
             return bs
@@ -116,7 +116,7 @@ def read_page(url):  # 读取页面
     return bs
 
 
-def find_title_and_post_date(bs):
+def find_title_and_post_date(bs):  # 读取标题与发布时间
     postdate = bs.find("span", id="postdate0").string
     print("postdate:", postdate)
     title = "".join(re.findall(re.compile(r"(.*) NGA玩家社区"), bs.find("title").string))
@@ -124,7 +124,7 @@ def find_title_and_post_date(bs):
     return title, str(postdate.split(" ", 1)[0])
 
 
-def find_shadiao(bs):
+def find_shadiao(bs):  # 查找首页内有沙雕图内容的标题
     title = bs.find_all("a", class_="topic")
     match_list = ["沙雕图", "傻屌图", "傻吊图", "沙吊图", "沙屌图", "傻雕图"]
     print("match start\n")
@@ -140,10 +140,10 @@ def find_shadiao(bs):
     return 0
 
 
-def create_folder(title, url, time):
+def create_folder(title, url, time):  # 新建文件夹
     title = str(title)
     url = str(url)
-    if not os.path.exists("Downloads"):
+    if not os.path.exists("Downloads"):  # Downloads文件夹
         print("no Downloads folder, creating")
         try:
             os.mkdir("Downloads")
@@ -153,9 +153,9 @@ def create_folder(title, url, time):
         else:
             print("folder created")
 
-    if not os.path.exists("Downloads/" + time + title):
+    if not os.path.exists("Downloads/" + time + title):  # 帖子文件夹
         print("no sub folder, creating")
-        #  文件名不能包含\/:*?"<>|，在txt内存储
+        # 文件名不能包含\/:*?"<>|，在txt内存储
         title = re.sub(re.compile(r"[\\/:*?\"<>|]"), "", title)
         try:
             os.mkdir("Downloads/" + time + title)
@@ -165,7 +165,7 @@ def create_folder(title, url, time):
         else:
             print("sub folder created")
 
-    if not os.path.exists("Downloads/" + time + title + "/url.txt"):
+    if not os.path.exists("Downloads/" + time + title + "/url.txt"):  # 文本文件用于放置URL
         print("no url text file exist, creating")
         try:
             f = open("Downloads/" + time + title + "/url.txt", "w")
@@ -179,7 +179,7 @@ def create_folder(title, url, time):
     return "Downloads/" + time + title + "/"
 
 
-def read_pic_url(bs):
+def read_pic_url(bs):  # 读取当前页所有图片URL
     scriptpattern = re.compile(r"url:")
     scripts = bs.find_all("script", text=scriptpattern)
     # print(scripts[-1].string, "\n")
@@ -196,7 +196,7 @@ def read_pic_url(bs):
     return urlgroup
 
 
-def download_pic(urlgroup, path):
+def download_pic(urlgroup, path):  # 下载图片
     print("download start")
     pattern = re.compile(r"-(.*)")
     for url in urlgroup:
@@ -204,7 +204,7 @@ def download_pic(urlgroup, path):
         print("picture name:", picname)
         print("picture url:", url)
         time.sleep(random.uniform(1, 2))
-        if not os.path.exists(path + str(picname[0])):
+        if not os.path.exists(path + str(picname[0])):  # 检查是否重复
             try:
                 urllib.request.urlretrieve(url, path + str(picname[0]))
             except IOError:
@@ -216,7 +216,7 @@ def download_pic(urlgroup, path):
     print("all picture for this page download COMPLETED")
 
 
-def read_topic_and_download(url, path=""):
+def read_topic_and_download(url, path=""):  # 递归顺序读取到帖子页尾
     bs = read_page(url)
     if path == "":
         title, date = find_title_and_post_date(bs)
