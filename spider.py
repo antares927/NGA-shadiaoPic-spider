@@ -1,10 +1,11 @@
+#!/usr/bin/python3
+# -*- coding: UTF-8 -*-
 from bs4 import *
 import requests
 import time
 import random
 import re
 import os
-import sys
 import datetime
 import traceback
 import urllib
@@ -23,19 +24,21 @@ headerTemp = {
     # "Cookie":
 }
 
+maxpagenumber = 0
 
-def check_cookie_file():
+
+def check_cookie_file():  # 检查cookie是否过期
     try:
-        f = open("cookie cache.txt", "r")  # 检查cookie缓存文件
+        f = open("cookie cache.txt", "r")
     except IOError:
         print("no cache file, creating")
         try:
             f = open("cookie cache.txt", "w")  # 新建文件
             f.close()
-            print("creating completed")
+            print("creating COMPLETED")
             return 1
         except IOError:
-            print("creating error:", traceback.print_exc())
+            print("creating ERROR:", traceback.print_exc())
             return 0
     print("cookie file exists")
     f.close()
@@ -50,46 +53,48 @@ def check_cookie_file():
         return 1
 
 
-def read_cookie_from_file():
+def read_cookie_from_file():  # 从文件读取cookie
     try:
-        f = open("cookie cache.txt", "r")  # 从文件读取cookie
+        f = open("cookie cache.txt", "r")
         cookie = f.read()
     except IOError:
-        print("read cookie file error:", traceback.print_exc())
+        print("read cookie file ERROR:", traceback.print_exc())
         return 0
     print("cookie:", cookie)
     f.close()
     return cookie
 
 
-def get_cookie():
+def get_cookie():  # 获取新cookie
     time.sleep(random.uniform(1, 2))
     ses = requests.session()
-    header = headerTemp
+    header = headerTemp.copy()
     header["Referer"] = "https://bbs.nga.cn/thread.php?fid=-7"
     ses.headers = header
     req = ses.get("https://bbs.nga.cn/thread.php?fid=-7")
     checkstr = re.findall(re.compile("lastvisit=.*?;"), req.headers["Set-Cookie"])[0] + " "
-    checkstr += re.findall(re.compile("ngaPassportUid=.*?;"), req.headers["Set-Cookie"])[0] + " "
+    try:
+        checkstr += re.findall(re.compile("ngaPassportUid=.*?;"), req.headers["Set-Cookie"])[0] + " "
+    except IndexError:
+        return 0
     checkstr += re.findall(re.compile("guestJs=.*?;"), req.content.decode('gbk', 'ignore'))[0][:-1]
     try:  # 获取cookie并写入文件
         f = open("cookie cache.txt", "w")
         f.write(checkstr)
         f.close()
     except IOError:
-        print("write error:", traceback.print_exc())
-    print("get cookie and write completed")
+        print("write ERROR:", traceback.print_exc())
+    print("get cookie and write COMPLETED")
 
 
-def read_page(url):
+def read_page(url):  # 读取页面
+    global maxpagenumber
     time.sleep(random.uniform(1, 2))
-    if url == "https://bbs.nga.cn/thread.php?fid=-7":  # 如果访问页面为水区首页
-        url += "&rand=233"
     cookie = read_cookie_from_file()
     if cookie == 0:
         return 0
     ses = requests.session()
-    header = headerTemp
+    header = headerTemp.copy()
     header["Referer"] = url
     header["Cookie"] = cookie
     ses.headers = header
@@ -97,13 +102,26 @@ def read_page(url):
     bs = BeautifulSoup(req.content, "lxml")
     # print(bs)
     print("get page")
+    if url != "https://bbs.nga.cn/thread.php?fid=-7":  # 如果访问页面为水区首页
+        print("reading:", url)
+        try:
+            scripts = str(bs.find_all("script", text=re.compile(r"var __PAGE"))[0])
+        except IndexError:
+            maxpagenumber = 1
+            return bs
+        print(scripts)
+        final = int(re.findall(re.compile(r":(.?),"), scripts)[0])
+        print("pages for this topic is:", final)
+        maxpagenumber = final
     return bs
 
 
-def find_post_date(bs):
+def find_title_and_post_date(bs):
     postdate = bs.find("span", id="postdate0").string
     print("postdate:", postdate)
-    return str(postdate.split(" ", 1)[0])
+    title = "".join(re.findall(re.compile(r"(.*) NGA玩家社区"), bs.find("title").string))
+    print("topic title:", title)
+    return title, str(postdate.split(" ", 1)[0])
 
 
 def find_shadiao(bs):
@@ -113,10 +131,13 @@ def find_shadiao(bs):
     for n in title:
         if any(shadiao in n.string for shadiao in match_list):
             print("MATCH in", n.string)
+            print("https://bbs.nga.cn" + n.get("href"), "\n")
+            return "https://bbs.nga.cn" + n.get("href")
         else:
             print("no match in", n.string)
-        print("https://bbs.nga.cn" + n.get("href"), "\n")
-    print("match completed")
+            print("https://bbs.nga.cn" + n.get("href"), "\n")
+    print("match COMPLETED")
+    return 0
 
 
 def create_folder(title, url, time):
@@ -127,7 +148,7 @@ def create_folder(title, url, time):
         try:
             os.mkdir("Downloads")
         except OSError:
-            print("creating folder error:", traceback.print_exc())
+            print("creating folder ERROR:", traceback.print_exc())
             return 0
         else:
             print("folder created")
@@ -151,9 +172,10 @@ def create_folder(title, url, time):
             f.write(url)
             f.close()
         except IOError:
-            print("writing error:", traceback.print_exc())
+            print("writing ERROR:", traceback.print_exc())
             return 0
-        print("url text file created")
+        else:
+            print("url text file created")
     return "Downloads/" + time + title + "/"
 
 
@@ -182,26 +204,53 @@ def download_pic(urlgroup, path):
         print("picture name:", picname)
         print("picture url:", url)
         time.sleep(random.uniform(1, 2))
-        try:
-            urllib.request.urlretrieve(url, path + "".join(picname))
-        except IOError:
-            print(traceback.print_exc())
+        if not os.path.exists(path + str(picname[0])):
+            try:
+                urllib.request.urlretrieve(url, path + str(picname[0]))
+            except IOError:
+                print(traceback.print_exc())
+            else:
+                print("download COMPLETED\n")
         else:
-            print("download completed\n")
-    print("all picture download completed")
+            print("file exists\n")
+    print("all picture for this page download COMPLETED")
 
 
-if __name__ == '__main__':
-    a = check_cookie_file()
-    if a == 1:
-        get_cookie()
-    elif a == 0:
-        sys.exit(0)
-    # bs = read_page("https://bbs.nga.cn/thread.php?fid=-7")
-    bs = read_page("https://bbs.nga.cn/read.php?tid=17524666")
-    if bs == 0:
-        sys.exit(0)
-    # find_shadiao(bs)
-    path = create_folder("谁来ps个赛博朋克2077沙雕图？", "https://bbs.nga.cn/read.php?tid=17524666", find_post_date(bs))
+def read_topic_and_download(url, path=""):
+    bs = read_page(url)
+    if path == "":
+        title, date = find_title_and_post_date(bs)
+        path = create_folder(title, url, date)
+    if path == 0:
+        return
     urlgroup = read_pic_url(bs)
     download_pic(urlgroup, path)
+    if "&page=" in url and int(url[-1]) < maxpagenumber:
+        print("ready to download page No.", int(url[-1])+1)
+        read_topic_and_download(url[:-1] + str(int(url[-1])+1), path)
+    else:
+        print("all pages download COMPLETED")
+        return 
+    if maxpagenumber > 1:
+        print("ready to download page No.2")
+        read_topic_and_download(url + "&page=2", path)
+
+
+if __name__ == "__main__":
+    while True:
+        cookiestate = check_cookie_file()
+        if cookiestate == 1:
+            cookie = get_cookie()
+            while cookie == 0:
+                cookie = get_cookie()
+        elif cookiestate == 0:
+            continue
+        bs = read_page("https://bbs.nga.cn/thread.php?fid=-7")
+        if bs == 0:
+            continue
+        shadiaourl = find_shadiao(bs)
+        if shadiaourl != 0:
+            read_topic_and_download(shadiaourl)
+        print("waiting for next loop (61 seconds later)")
+        time.sleep(61)
+    print("exit")
