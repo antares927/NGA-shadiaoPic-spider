@@ -25,6 +25,7 @@ headerTemp = {
 }
 
 maxpagenumber = 0
+counter = 0
 
 
 def check_cookie_file():  # 检查cookie是否过期
@@ -203,9 +204,9 @@ def download_pic(urlgroup, path):  # 下载图片
         picname = re.findall(pattern, url)
         print("picture name:", picname)
         print("picture url:", url)
-        time.sleep(random.uniform(1, 2))
         if not os.path.exists(path + str(picname[0])):  # 检查是否重复
             try:
+                time.sleep(random.uniform(1, 2))
                 urllib.request.urlretrieve(url, path + str(picname[0]))
             except IOError:
                 print(traceback.print_exc())
@@ -238,6 +239,8 @@ def read_topic_and_download(url, path=""):  # 递归顺序读取到帖子页尾
 
 if __name__ == "__main__":
     while True:
+        counter += 1
+        print("\nThe No.%d loop" % counter)
         cookiestate = check_cookie_file()
         if cookiestate == 1:
             cookie = get_cookie()
@@ -251,6 +254,7 @@ if __name__ == "__main__":
         shadiaourl = find_shadiao(bs)
         if shadiaourl != 0:
             read_topic_and_download(shadiaourl)
-        print("waiting for next loop (61 seconds later)")
-        time.sleep(61)
+        print("waiting for next loop (31 seconds later)")
+        print("last time:", time.asctime(time.localtime(time.time())))
+        time.sleep(31)
     print("exit")
