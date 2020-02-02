@@ -11,7 +11,7 @@
 或
 
 1. 在Chrome中登录自己的NGA账号
-2. 运行`spider_ForConvertToEXE.exe`
+2. 运行`spider_ForConvertToEXE.exe`或`spider_ForConvertToEXE.py`
 
 **报错说明**
 1. No supported browser found (Chrome or Firefox)  
