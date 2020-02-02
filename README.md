@@ -6,7 +6,12 @@
 
 ## 使用说明
 1. 在Chrome或Firefox中登录自己的NGA账号
-2. 运行软件
+2. 运行`spider.py`
+
+或
+
+1. 在Chrome中登录自己的NGA账号
+2. 运行`spider_ForConvertToEXE.exe`
 
 **报错说明**
 1. No supported browser found (Chrome or Firefox)  
@@ -15,7 +20,9 @@
     账号未登录
 
 ### Windows
-从release内下载压缩包，解压后运行`spider.exe`即可，通过`Ctrl+C`或直接关闭窗口以终止程序
+**注：因为在使用pyinstaller转换`spider.py`后执行文件时在import browsercookie库时出现了无法解决的问题，抛弃了browsercookie库用直接解密cookie文件的方法重写了方法，作者电脑上只有Chrome（也懒得去测试Firefox），所以exe文件仅支持Chrome浏览器**
+
+从release内下载并运行`spider_ForConvertToEXE.exe`即可，通过`Ctrl+C`或直接关闭窗口以终止程序
 
 ## 免责声明
 本程序仅供爱好交流使用，对程序与源码的任何魔改造成的后果本人概不负责
