@@ -15,7 +15,7 @@
 
 **注：因为在使用pyinstaller转换`spider.py`后执行时在import browsercookie库时出现了无法解决的问题，抛弃了browsercookie库用直接解密cookie文件的方法重写了方法，作者电脑上只有Chrome（也懒得去测试Firefox），所以`spider_ForConvertToEXE`仅支持Chrome浏览器**
 
-**报错说明**
+### 报错说明
 1. No supported browser found (Chrome or Firefox)  
     Browsercookie库仅支持Chrome与Firefox
 2. Cookie invalid  
