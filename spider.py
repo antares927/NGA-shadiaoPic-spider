@@ -10,6 +10,7 @@ import re
 import os
 import traceback
 import urllib
+import sys
 
 maxpagenumber = 0
 counter = 0
@@ -156,16 +157,16 @@ def read_topic_and_download(url, path=""):  # 递归顺序读取到帖子页尾
 
 
 if __name__ == "__main__":
+    try:
+        cookie = browsercookie.load()
+    except browsercookie.BrowserCookieError:
+        print("No supported browser found (Chrome or Firefox)")
+        time.sleep(300)
+        sys.exit(-1)
+
     while True:
         counter += 1
         print("\nThe No.%d loop" % counter)
-
-        try:
-            cookie = browsercookie.load()
-        except browsercookie.BrowserCookieError:
-            print("No supported browser found (Chrome or Firefox)")
-            time.sleep(300)
-            continue
 
         response = requests.get("https://bbs.nga.cn/thread.php?fid=-7", cookies=cookie)
         if not response.ok:
@@ -182,4 +183,5 @@ if __name__ == "__main__":
         print("Waiting for next loop (31 seconds later)")
         print("Last time:", time.asctime(time.localtime(time.time())))
         time.sleep(31)
+        
     print("Exit")
