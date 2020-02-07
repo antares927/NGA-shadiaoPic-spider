@@ -118,6 +118,10 @@ def read_pic_url(bs):  # 读取当前页所有图片URL
 def download_pic(urlgroup, path):  # 下载图片
     print("Download start")
     pattern = re.compile(r"-(.*)")
+    opener = urllib.request.build_opener()
+    opener.addheaders = [('User-Agent',
+                          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36')]
+    urllib.request.install_opener(opener)
     for url in urlgroup:
         picname = re.findall(pattern, url)
         print("Picture name:", picname)
